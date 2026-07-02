@@ -33,7 +33,7 @@ sudo apt install -y zsh
 Oh My Zsh is installed via a curl script from the project's GitHub:
 
 ```bash
-sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+sh -c "$(curl -fsSL https://gh-proxy.com/https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
 ```
 
 After running this:
@@ -56,7 +56,7 @@ This plugin colorizes commands green/red as you type — instant feedback on whe
 Clone it into Oh My Zsh's custom plugins directory:
 
 ```bash
-git clone --depth 1 https://github.com/zsh-users/zsh-syntax-highlighting.git \
+git clone --depth 1 https://gh-proxy.com/https://github.com/zsh-users/zsh-syntax-highlighting.git \
   ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting
 ```
 
@@ -65,7 +65,7 @@ git clone --depth 1 https://github.com/zsh-users/zsh-syntax-highlighting.git \
 This plugin suggests completions based on your command history, shown as faint gray text. Press **→** to accept a suggestion.
 
 ```bash
-git clone --depth 1 https://github.com/zsh-users/zsh-autosuggestions.git \
+git clone --depth 1 https://gh-proxy.com/https://github.com/zsh-users/zsh-autosuggestions.git \
   ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions
 ```
 
@@ -97,9 +97,15 @@ sudo dnf install -y fzf
 sudo apt install -y fzf
 
 # Or install from source (latest version)
-git clone --depth 1 https://github.com/junegunn/fzf.git ~/.fzf
+git clone --depth 1 https://gh-proxy.com/https://github.com/junegunn/fzf.git ~/.fzf
 ~/.fzf/install
 ```
+
+> ⚠️ **Proxy gotcha:** If `git clone` was done via the proxy, the fzf repo's `origin` remote will still point to the proxy URL. The `~/.fzf/install` script may hang on a `git pull`. If that happens, interrupt it (`Ctrl+C`), reset the remote, and re-run:
+> ```bash
+> cd ~/.fzf && git remote set-url origin https://github.com/junegunn/fzf.git
+> ~/.fzf/install
+> ```
 
 ### 5b. fzf Installation Prompts
 
