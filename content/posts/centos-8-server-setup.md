@@ -1,14 +1,14 @@
 +++
 date = '2026-07-02T00:36:00+08:00'
 draft = false
-title = 'CentOS 8 Server Initial Setup'
+title = '🖥️ CentOS 8 Server Initial Setup'
 +++
 
-## Overview
+## 📋 Overview
 
 This post documents the initial configuration of a CentOS 8 VM (`ops-server`) — from default installation to a fully configured server.
 
-## Baseline
+## 📊 Baseline
 
 | Item | Before | After |
 |---|---|---|
@@ -22,7 +22,7 @@ This post documents the initial configuration of a CentOS 8 VM (`ops-server`) �
 
 ---
 
-## 1. Passwordless Sudo
+## 1. 🔑 Passwordless Sudo
 
 Edit sudoers to allow `jellyfish` to run commands without a password:
 
@@ -36,11 +36,11 @@ Add this single line:
 jellyfish ALL=(ALL) NOPASSWD: ALL
 ```
 
-Always use `visudo` — it validates syntax before saving. A corrupted sudoers file can lock you out of the system.
+Always use `visudo` — it validates syntax before saving. A corrupted sudoers file can lock you out of the system. ⚠️
 
 ---
 
-## 2. Hostname
+## 2. 🏷️ Hostname
 
 ```bash
 sudo hostnamectl set-hostname ops-server.localdomain
@@ -54,9 +54,9 @@ echo "127.0.0.1   ops-server.localdomain ops-server" | sudo tee -a /etc/hosts
 
 ---
 
-## 3. Network Configuration
+## 3. 🌐 Network Configuration
 
-### 3a. Identify the Interface
+### 3a. 🔍 Identify the Interface
 
 ```bash
 nmcli con show
@@ -64,7 +64,7 @@ nmcli con show
 
 On this VM, the interface is `ens160`.
 
-### 3b. Static IPv4 Attempt
+### 3b. 📡 Static IPv4 Attempt
 
 The intended config was:
 
@@ -78,11 +78,11 @@ sudo nmcli con mod ens160 \
 sudo nmcli device reapply ens160
 ```
 
-**Problem:** The network gateway (192.168.159.1) blocked outbound traffic for statically-configured IPs — only DHCP-leased addresses could reach the internet. This is likely a firewall or gateway policy.
+**❌ Problem:** The network gateway (192.168.159.1) blocked outbound traffic for statically-configured IPs — only DHCP-leased addresses could reach the internet. This is likely a firewall or gateway policy.
 
-**Fix:** Reverted to DHCP. For a "permanent static" effect, configure a **DHCP reservation** on the router — bind `192.168.159.139` to the VM's MAC address (`00:0c:29:ae:47:41`).
+**✅ Fix:** Reverted to DHCP. For a "permanent static" effect, configure a **DHCP reservation** on the router — bind `192.168.159.139` to the VM's MAC address (`00:0c:29:ae:47:41`).
 
-### 3c. Static IPv6 (ULA)
+### 3c. 🌍 Static IPv6 (ULA)
 
 Since no IPv6 router is available on this network, I configured a Unique Local Address (ULA):
 
@@ -105,9 +105,9 @@ ip -6 addr show ens160
 
 ---
 
-## 4. Yum Repository Mirror
+## 4. 📦 Yum Repository Mirror
 
-CentOS 8 reached EOL, so the default `mirrorlist.centos.org` is dead. I switched to the **Aliyun vault mirror** (reliable from China):
+CentOS 8 reached EOL, so the default `mirrorlist.centos.org` is dead. 💀 I switched to the **Aliyun vault mirror** (reliable from China):
 
 ```bash
 # Disable mirrorlist, enable Aliyun vault
@@ -139,13 +139,13 @@ sudo dnf makecache
 
 **Other mirror options:**
 - `vault.centos.org` — official archive
-- `mirrors.aliyun.com/centos-vault/` — Alibaba Cloud (used here)
+- `mirrors.aliyun.com/centos-vault/` — Alibaba Cloud (used here) 🇨🇳
 - `mirrors.tuna.tsinghua.edu.cn/centos-vault/` — Tsinghua University
 - `mirrors.ustc.edu.cn/centos-vault/` — USTC
 
 ---
 
-## 5. Zsh + Oh My Zsh
+## 5. 🐚 Zsh + Oh My Zsh
 
 Zsh wasn't available in the CentOS 8 repos (all related packages were removed). Since sudo was configured, we could have used `dnf`, but instead I went with a **static build** for portability:
 
@@ -201,7 +201,7 @@ plugins=(
 )
 ```
 
-### Terminfo Fix
+### Terminfo Fix 🛠️
 
 If you see `can't find terminal definition for xterm-256color`:
 
@@ -211,7 +211,7 @@ sudo dnf install -y ncurses-term
 
 ---
 
-## 6. fzf — Fuzzy Finder
+## 6. 🔍 fzf — Fuzzy Finder
 
 ```bash
 # Download binary
@@ -232,7 +232,7 @@ Source in `~/.zshrc`:
 
 ---
 
-## 7. Install Git
+## 7. 📥 Install Git
 
 With working yum repos, install git is trivial:
 
@@ -242,7 +242,7 @@ sudo dnf install -y git
 
 ---
 
-## Final Verification
+## ✅ Final Verification
 
 ```bash
 $ ssh jellyfish@ops-server
@@ -256,7 +256,7 @@ $ ~/.local/bin/zsh
 # IPv6: fd00::139 ✓
 ```
 
-## Summary
+## 📊 Summary
 
 | Component | Method | Status |
 |---|---|---|

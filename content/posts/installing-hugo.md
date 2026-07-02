@@ -1,20 +1,20 @@
 +++
 date = '2026-07-01T23:09:42+08:00'
 draft = false
-title = 'Installing Hugo on Linux'
+title = '📝 Installing Hugo on Linux'
 +++
 
-## Overview
+## 📋 Overview
 
-This post documents the manual installation of Hugo (latest version) on a Linux system, plus the creation of this very blog.
+This post documents the manual installation of Hugo (latest version) on a Linux system, plus the creation of this very blog. 🔁
 
-## What is Hugo?
+## 🤔 What is Hugo?
 
-[Hugo](https://gohugo.io/) is a fast and flexible static site generator written in Go. It's popular among developers, ops engineers, and writers who want a simple, version-controlled way to publish content.
+[Hugo](https://gohugo.io/) is a fast and flexible static site generator written in Go. It's popular among developers, ops engineers, and writers who want a simple, version-controlled way to publish content. ⚡
 
-## Installation Steps
+## 🛠️ Installation Steps
 
-### 1. Check the Latest Version
+### 1. 🔍 Check the Latest Version
 
 First, find the latest release from GitHub:
 
@@ -24,7 +24,7 @@ curl -s https://api.github.com/repos/gohugoio/hugo/releases/latest | grep -oP '"
 
 At the time of writing, the latest version is **v0.163.3**.
 
-### 2. Download the Binary
+### 2. 📥 Download the Binary
 
 Download the extended version (includes Sass/SCSS support):
 
@@ -32,12 +32,12 @@ Download the extended version (includes Sass/SCSS support):
 curl -LO https://github.com/gohugoio/hugo/releases/download/v0.163.3/hugo_extended_0.163.3_linux-amd64.tar.gz
 ```
 
-> **Note:** If direct GitHub downloads are slow or blocked in your region, you can use a mirror proxy like `ghfast.top`:
+> **🌏 Note:** If direct GitHub downloads are slow or blocked in your region, you can use a mirror proxy like `ghfast.top`:
 > ```bash
 > curl -LO https://ghfast.top/https://github.com/gohugoio/hugo/releases/download/v0.163.3/hugo_extended_0.163.3_linux-amd64.tar.gz
 > ```
 
-### 3. Extract and Install
+### 3. 📂 Extract and Install
 
 Extract the archive and move the binary to your local bin directory:
 
@@ -48,7 +48,7 @@ mv hugo ~/.local/bin/
 rm -f hugo_extended_0.163.3_linux-amd64.tar.gz README.md LICENSE
 ```
 
-### 4. Verify Installation
+### 4. ✅ Verify Installation
 
 ```bash
 ~/.local/bin/hugo version
@@ -59,7 +59,7 @@ Expected output:
 hugo v0.163.3-4d22555aebf458d5d150500c9ac4bee5b24cf0d3+extended linux/amd64 BuildDate=2026-06-18T16:18:24Z VendorInfo=gohugoio
 ```
 
-### 5. Add to PATH (Optional)
+### 5. 🧭 Add to PATH (Optional)
 
 Add this to your `~/.bashrc` or `~/.zshrc`:
 
@@ -67,22 +67,22 @@ Add this to your `~/.bashrc` or `~/.zshrc`:
 export PATH="$HOME/.local/bin:$PATH"
 ```
 
-## Creating a New Hugo Site
+## 🆕 Creating a New Hugo Site
 
-### 1. Create the Site
+### 1. 🚀 Create the Site
 
 ```bash
 hugo new site ops-blog
 cd ops-blog
 ```
 
-### 2. Initialize Git
+### 2. 📚 Initialize Git
 
 ```bash
 git init
 ```
 
-### 3. Add a Theme
+### 3. 🎨 Add a Theme
 
 This blog uses the [Ananke](https://github.com/theNewDynamic/gohugo-theme-ananke) theme:
 
@@ -90,7 +90,7 @@ This blog uses the [Ananke](https://github.com/theNewDynamic/gohugo-theme-ananke
 git submodule add --depth 1 https://github.com/theNewDynamic/gohugo-theme-ananke.git themes/ananke
 ```
 
-### 4. Configure the Site
+### 4. ⚙️ Configure the Site
 
 Edit `hugo.toml`:
 
@@ -101,21 +101,21 @@ title = 'Ops Engineer Blog'
 theme = 'ananke'
 ```
 
-### 5. Create Your First Post
+### 5. ✍️ Create Your First Post
 
 ```bash
 hugo new content content/posts/installing-hugo.md
 ```
 
-### 6. Start the Development Server
+### 6. 👀 Start the Development Server
 
 ```bash
 hugo server --buildDrafts
 ```
 
-Visit `http://localhost:1313` to see your site.
+Visit `http://localhost:1313` to see your site. 🌐
 
-## Git Workflow
+## 🔄 Git Workflow
 
 Since the Hugo project is Git-managed, here's a basic workflow:
 
@@ -130,21 +130,21 @@ git commit -m "Initial Hugo site setup"
 git push origin main
 ```
 
-## Why Hugo for Ops Engineers?
+## 💡 Why Hugo for Ops Engineers?
 
-- **Fast builds**: Hugo generates sites in milliseconds
-- **Markdown-native**: Write in Markdown, focus on content
-- **Version controlled**: Your entire site is in Git
-- **CI/CD friendly**: Easy to deploy with GitHub Actions, GitLab CI, etc.
-- **No database**: Just static files — easy to host anywhere
+- ⚡ **Fast builds**: Hugo generates sites in milliseconds
+- ✏️ **Markdown-native**: Write in Markdown, focus on content
+- 📚 **Version controlled**: Your entire site is in Git
+- 🔄 **CI/CD friendly**: Easy to deploy with GitHub Actions, GitLab CI, etc.
+- 🗄️ **No database**: Just static files — easy to host anywhere
 
-## Next Steps
+## 🔜 Next Steps
 
-- Customize the theme
-- Set up a CI/CD pipeline for automatic deployment
-- Configure a custom domain
-- Add analytics or comments
+- Customize the theme 🎨
+- Set up a CI/CD pipeline for automatic deployment 🚀
+- Configure a custom domain 🌐
+- Add analytics or comments 📊
 
 ---
 
-*This post was written as part of setting up this blog. Meta, right?*
+*📝 This post was written as part of setting up this blog. Meta, right?* 🔁
