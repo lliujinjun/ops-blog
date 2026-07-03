@@ -16,20 +16,7 @@ Tested on CentOS 8.5 at `192.168.8.128`.
 
 ---
 
-## Step 1: Fix the Repos
-
-CentOS 8 is EOL — the default mirror URLs no longer resolve. Switch to `vault.centos.org`:
-
-```bash
-sudo sed -i 's/mirror.centos.org/vault.centos.org/g' /etc/yum.repos.d/CentOS-*
-sudo sed -i 's/^#baseurl/baseurl/g' /etc/yum.repos.d/CentOS-*
-sudo sed -i 's/^mirrorlist/#mirrorlist/g' /etc/yum.repos.d/CentOS-*
-sudo dnf clean all
-```
-
----
-
-## Step 2: Install Build Tools
+## Step 1: Install Build Tools
 
 ```bash
 sudo dnf install -y rpm-build gcc make
@@ -38,7 +25,7 @@ sudo dnf install -y openssl-devel pam-devel zlib-devel
 
 ---
 
-## Step 3: Set Up RPM Build Tree & Download Sources
+## Step 2: Set Up RPM Build Tree & Download Sources
 
 ```bash
 mkdir -p ~/rpmbuild/{SPECS,SOURCES}
@@ -54,7 +41,7 @@ wget -O ~/rpmbuild/SOURCES/openssh-9.9.tar.gz \
 
 ---
 
-## Step 4: Write a Minimal Spec File
+## Step 3: Write a Minimal Spec File
 
 The original CentOS spec has 65 patches that only apply to 8.0. Instead, write a clean spec:
 
@@ -120,7 +107,7 @@ ENDSPEC
 
 ---
 
-## Step 5: Build the RPM
+## Step 4: Build the RPM
 
 ```bash
 cd ~/rpmbuild
@@ -131,7 +118,7 @@ If successful, the RPM will be at `~/rpmbuild/RPMS/x86_64/openssh99-9.9-1.el8.x8
 
 ---
 
-## Step 6: Install the New RPM
+## Step 5: Install the New RPM
 
 The new RPM conflicts with existing `openssh`, `openssh-clients`, and `openssh-server` packages. Use `--replacefiles`:
 
@@ -141,13 +128,25 @@ sudo rpm -Uvh --replacefiles ~/rpmbuild/RPMS/x86_64/openssh99-9.9-1.el8.x86_64.r
 
 ---
 
-## Step 7: Fix Deprecated Config Options
+## Step 6: Fix Deprecated Crypto Policy
 
-OpenSSH 9.9 has removed legacy GSSAPI options. Clean up both the main config and the system crypto policy:
+OpenSSH 9.9 removed the `GSSAPIKexAlgorithms` option that CentOS 8's system crypto policy includes. The cleanest fix is to move the generated policy file aside — sshd will fall back to its built-in defaults, which are secure:
 
 ```bash
-sudo sed -i '/GSSAPI/d' /etc/ssh/sshd_config
-sudo sed -i '/GSSAPI/d' /etc/crypto-policies/back-ends/opensshserver.config
+sudo mv /etc/crypto-policies/back-ends/opensshserver.config \
+       /etc/crypto-policies/back-ends/opensshserver.config.bak
+```
+
+> This removes the `CRYPTO_POLICY` override and the deprecated GSSAPI options together. This is safe because OpenSSH 9.9 has modern defaults built-in.
+
+---
+
+## Step 7: Fix Host Key Permissions
+
+The new sshd is stricter about key file permissions:
+
+```bash
+sudo chmod 600 /etc/ssh/ssh_host_*_key
 ```
 
 ---
@@ -190,18 +189,27 @@ ssh user@centos8-server
 
 ```bash
 # Quick reference — all steps in order:
-sudo sed -i 's/mirror.centos.org/vault.centos.org/g' /etc/yum.repos.d/CentOS-*
+
+# 1-2. Install build tools + download sources
 sudo dnf install -y rpm-build gcc make openssl-devel pam-devel zlib-devel
 mkdir -p ~/rpmbuild/{SPECS,SOURCES}
 wget -P /tmp https://vault.centos.org/centos/8/BaseOS/Source/SPackages/openssh-8.0p1-10.el8.src.rpm
 rpm -ivh /tmp/openssh-8.0p1-10.el8.src.rpm
-wget -O ~/rpmbuild/SOURCES/openssh-9.9.tar.gz https://github.com/openssh/openssh-portable/archive/refs/tags/V_9_9_P1.tar.gz
-# (write the spec file from Step 4)
+wget -O ~/rpmbuild/SOURCES/openssh-9.9.tar.gz \
+  https://github.com/openssh/openssh-portable/archive/refs/tags/V_9_9_P1.tar.gz
+# 3. Write spec file (see Step 3 above)
+# 4. Build
 cd ~/rpmbuild && rpmbuild -ba SPECS/openssh99.spec
+# 5. Install
 sudo rpm -Uvh --replacefiles ~/rpmbuild/RPMS/x86_64/openssh99-9.9-1.el8.x86_64.rpm
-sudo sed -i '/GSSAPI/d' /etc/ssh/sshd_config
-sudo sed -i '/GSSAPI/d' /etc/crypto-policies/back-ends/opensshserver.config
+# 6. Fix crypto policy
+sudo mv /etc/crypto-policies/back-ends/opensshserver.config \
+       /etc/crypto-policies/back-ends/opensshserver.config.bak
+# 7. Fix key perms
+sudo chmod 600 /etc/ssh/ssh_host_*_key
+# 8. Regenerate keys if needed
 sudo ssh-keygen -A
+# 9. Restart
 sudo systemctl restart sshd
 ssh -V
 ```
