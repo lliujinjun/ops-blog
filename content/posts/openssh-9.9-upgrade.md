@@ -1,5 +1,5 @@
 +++
-date = '2026-07-03T21:00:00+08:00'
+date = '2026-07-03T23:30:00+08:00'
 draft = false
 title = '🖧 Upgrading OpenSSH on CentOS 8 via RPM Build'
 +++
@@ -16,7 +16,7 @@ Tested on CentOS 8.5 at `192.168.8.128`.
 
 ---
 
-## Step 1: Install Build Tools
+## Step 1: 🛠️ Install Build Tools
 
 ```bash
 sudo dnf install -y rpm-build gcc make
@@ -25,7 +25,7 @@ sudo dnf install -y openssl-devel pam-devel zlib-devel
 
 ---
 
-## Step 2: Set Up RPM Build Tree & Download Sources
+## Step 2: 📦 Set Up RPM Build Tree & Download Sources
 
 ```bash
 mkdir -p ~/rpmbuild/{SPECS,SOURCES}
@@ -41,7 +41,7 @@ wget -O ~/rpmbuild/SOURCES/openssh-9.9.tar.gz \
 
 ---
 
-## Step 3: Write a Minimal Spec File
+## Step 3: 📄 Write a Minimal Spec File
 
 The original CentOS spec has 65 patches that only apply to 8.0. Instead, write a clean spec:
 
@@ -107,7 +107,7 @@ ENDSPEC
 
 ---
 
-## Step 4: Build the RPM
+## Step 4: 🔨 Build the RPM
 
 ```bash
 cd ~/rpmbuild
@@ -118,7 +118,7 @@ If successful, the RPM will be at `~/rpmbuild/RPMS/x86_64/openssh99-9.9-1.el8.x8
 
 ---
 
-## Step 5: Install the New RPM
+## Step 5: 📥 Install the New RPM
 
 The new RPM conflicts with existing `openssh`, `openssh-clients`, and `openssh-server` packages. Use `--replacefiles`:
 
@@ -128,7 +128,7 @@ sudo rpm -Uvh --replacefiles ~/rpmbuild/RPMS/x86_64/openssh99-9.9-1.el8.x86_64.r
 
 ---
 
-## Step 6: Fix Deprecated Crypto Policy
+## Step 6: 🔧 Fix Deprecated Crypto Policy
 
 OpenSSH 9.9 removed the `GSSAPIKexAlgorithms` option that CentOS 8's system crypto policy includes. The cleanest fix is to move the generated policy file aside — sshd will fall back to its built-in defaults, which are secure:
 
@@ -141,7 +141,7 @@ sudo mv /etc/crypto-policies/back-ends/opensshserver.config \
 
 ---
 
-## Step 7: Fix Host Key Permissions
+## Step 7: 🔑 Fix Host Key Permissions
 
 The new sshd is stricter about key file permissions:
 
@@ -151,7 +151,7 @@ sudo chmod 600 /etc/ssh/ssh_host_*_key
 
 ---
 
-## Step 8: Regenerate Host Keys (If Missing)
+## Step 8: 🔄 Regenerate Host Keys (If Missing)
 
 If `sshd -t` reports "no hostkeys available", regenerate them:
 
@@ -163,7 +163,7 @@ This creates all missing host key types (`rsa`, `ecdsa`, `ed25519`).
 
 ---
 
-## Step 9: Restart and Verify
+## Step 9: ✅ Restart and Verify
 
 ```bash
 sudo systemctl restart sshd
@@ -185,7 +185,7 @@ ssh user@centos8-server
 
 ---
 
-## Summary
+## 📝 Summary
 
 ```bash
 # Quick reference — all steps in order:
