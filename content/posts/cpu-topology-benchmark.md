@@ -26,16 +26,7 @@ sysbench --version
 ### Collect hardware info
 
 ```bash
-lscpu
-nproc
-free -h
-```
-
-### Verify KVM / virtualization
-
-```bash
-ls /dev/kvm
-cat /sys/module/kvm_amd/parameters/nested
+lscpu | grep -E "CPU|Socket|Core|Thread|NUMA"
 ```
 
 ---
@@ -69,24 +60,6 @@ sysbench cpu --threads=24 --time=15 run
 ```
 
 ---
-
-## The Benchmark Commands
-
-### Single benchmark run
-
-```bash
-sysbench cpu --threads=4 --time=15 run
-```
-
-### Full scaling sweep
-
-```bash
-for t in 1 2 4 6 8 10 12 16 20 24; do
-  sysbench cpu --threads=$t --time=10 run 2>&1 | grep "events per second"
-done
-```
-
-This runs from 1 to 24 threads (2× overcommit) in 10-second test windows, giving a clean scaling curve.
 
 ---
 
