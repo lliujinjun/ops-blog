@@ -8,45 +8,13 @@ title = '🔬 Does CPU Topology Affect Performance? A sysbench Experiment'
 
 Does changing between 1 socket × 12 cores and 2 sockets × 6 cores make a real-world performance difference? I ran `sysbench cpu` on a CentOS Stream 9 VMware VM to find out.
 
----
-
-## 🔧 Setup
-
-### Install sysbench
-
-```bash
-sudo dnf install -y epel-release
-sudo dnf install -y sysbench
-sysbench --version
-```
-
-### Collect Hardware Info
-
-```bash
-$ lscpu | grep -E "CPU|Socket|Core|Thread|NUMA"
-CPU(s):                                  12
-On-line CPU(s) list:                     0-11
-Model name:                              AMD Ryzen 5 2600 Six-Core Processor
-Thread(s) per core:                      1
-Core(s) per socket:                      12
-Socket(s):                               1
-NUMA node(s):                            1
-NUMA node0 CPU(s):                       0-11
-```
-
-| Property | Value |
-|---|---|
-| CPU Model | AMD Ryzen 5 2600 Six-Core Processor |
-| Total vCPUs | 4 (VMware VM, nested) |
-| Topology | 1 socket × 4 cores × 1 thread |
-| NUMA Nodes | 1 |
-| Host RAM | 3.5 GB |
+**Host:** AMD Ryzen 5 2600, CentOS Stream 9, VMware VM, 3.5 GB RAM
 
 ---
 
-## Test Configurations
+## The Setup
 
-Two identical 12-vCPU setups, only the topology changed:
+I tested two identical configurations — same VM, same CPU count (12 vCPUs), only the topology changed:
 
 | Config | Sockets | Cores/socket | Threads/core | Total vCPUs |
 |---|---|---|---|---|
@@ -57,51 +25,53 @@ The topology is configured in the VMware VM settings (`.vmx` file or vSphere), t
 
 ---
 
-## Benchmark
+## The Benchmark
 
-Using `sysbench cpu` which runs prime number calculations. Each test runs for 10-15 seconds and reports events per second.
+Using `sysbench cpu` which runs prime number calculations:
 
 ```bash
-# Single thread baseline
+# Single thread
 sysbench cpu run
 
-# Multi-threaded
+# Multi-threaded (scale to vCPU count)
 sysbench cpu --threads=12 --time=15 run
 
-# Full scaling sweep (1 to 24 threads)
-for t in 1 2 4 6 8 10 12 16 20 24; do
-  sysbench cpu --threads=$t --time=10 run 2>&1 | grep "events per second"
-done
+# Overcommitted (shows if hyperthreading helps)
+sysbench cpu --threads=24 --time=15 run
 ```
 
 ---
 
 ## Results
 
-### Config A: 1 Socket × 12 Cores
+### 1 Socket × 12 Cores
 
 ```
-CPU(s):          12    Socket(s):       1
-Core(s)/socket:  12    NUMA node(s):    1
+CPU(s):          12
+Socket(s):       1
+Core(s)/socket:  12
+NUMA node(s):    1
 ```
 
 | Threads | Events/sec | Scaling vs 1T |
 |---|---|---|
 | 1 | 1,844 | — |
-| 12 | 11,012 | 6.0× |
+| 12 | 11,012 | 6.0x |
 | 24 | 10,966 | — (overcommit) |
 
-### Config B: 2 Sockets × 6 Cores
+### 2 Sockets × 6 Cores
 
 ```
-CPU(s):          12    Socket(s):       2
-Core(s)/socket:  6     NUMA node(s):    1
+CPU(s):          12
+Socket(s):       2
+Core(s)/socket:  6
+NUMA node(s):    1
 ```
 
 | Threads | Events/sec | Scaling vs 1T |
 |---|---|---|
 | 1 | 1,819 | — |
-| 12 | 11,001 | 6.0× |
+| 12 | 11,001 | 6.0x |
 | 24 | 10,987 | — (overcommit) |
 
 ### Side-by-Side Comparison
@@ -112,7 +82,7 @@ Core(s)/socket:  6     NUMA node(s):    1
 | 12 threads | 11,012/s | 11,001/s | -0.1% |
 | 24 threads | 10,966/s | 10,987/s | +0.2% |
 
-All results within **±1.5%** — normal measurement variance. **No meaningful difference.**
+All results are within **±1.5%** — well within normal measurement variance.
 
 ---
 
@@ -135,31 +105,16 @@ With one NUMA domain, all memory access is local — there's no penalty for a vC
 
 ## Scaling Insights
 
-A full sweep from 1 to 24 threads shows exactly where the host CPU hits its limit:
+```
+12 threads:  ~11,000/s  →  6.0x over single thread
+24 threads:  ~11,000/s  →  No improvement (overcommit)
+```
 
-| Threads | Events/sec | Scaling | Efficiency |
-|---|---|---|---|---|
-| 1 | 1,816 | 1.0× | — |
-| 2 | 3,520 | 1.94× | **97%** ✅ |
-| 4 | 6,800 | 3.74× | **94%** ✅ |
-| 6 | 9,041 | 4.98× | 83% ⚠️ |
-| 8 | 10,123 | 5.57× | 70% |
-| 10 | 10,672 | 5.88× | 59% |
-| **12** | **10,932** | **6.02×** | **50%** |
-| 16 | 10,966 | 6.04× | — (flat) |
-| 20 | 10,945 | 6.03× | — (flat) |
-| 24 | 10,941 | 6.02× | — (flat) |
+The Ryzen 5 2600 has 6 physical cores / 12 threads. Adding more than 12 sysbench threads shows zero gain — the CPU is saturated. This tells us:
 
-**Key observations:**
-
-- **Up to 4 threads:** Near-perfect scaling (~95% efficiency). Each added thread gives almost linear gains.
-- **6 threads:** Efficiency drops to 83% — this matches the host's 6 physical cores. Memory bandwidth starts to bottleneck.
-- **8-12 threads:** Diminishing returns. SMT/hyperthreading adds ~50% over 6 cores, not 100%.
-- **12+ threads:** Completely flat. The host Ryzen 5 2600 is saturated at full capacity.
-- The VMware hypervisor is **efficient** — near-linear scaling up to physical core count.
-- **Overcommitting CPU** (more vCPUs than host cores) doesn't help CPU-bound workloads.
-
-**Takeaway:** For this host, **4-6 vCPUs** is the sweet spot. More than that adds scheduler overhead with no real throughput gain.
+- The VMware hypervisor is **efficient** — near-linear scaling up to physical core count
+- **Overcommitting CPU** (more vCPUs than host cores) doesn't help CPU-bound workloads
+- Memory bandwidth starts to bottleneck beyond ~8 threads
 
 ---
 
