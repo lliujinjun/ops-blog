@@ -50,8 +50,8 @@ A reboot is required for full disable — for testing, `setenforce 0` is suffici
 
 ```bash
 sudo dnf install -y java-21-openjdk-headless wget unzip glibc-devel zlib-devel \
-  pulseaudio-libs libX11 libxkbfile libXcomposite libXcursor libXdamage \
-  libXfixes libXi libXrandr libXrender libXtst libXScrnSaver libpng
+  pulseaudio-libs libX11 libX11-xcb libxkbfile libXcomposite libXcursor \
+  libXdamage libXfixes libXi libXrandr libXrender libXtst libXScrnSaver libpng
 ```
 
 Java 21 is required by the Android SDK tools. The X11 and PulseAudio libs are needed by the emulator's QEMU binary (even in headless mode).
@@ -217,6 +217,38 @@ Linux localhost 5.15.155-android14-11-g5b0ba41eebbf #1 SMP PREEMPT Wed ...
 3. **🖥️ GPU mode matters headless** — `-gpu guest` (guest-side rendering) works reliably without a physical GPU. `-gpu swiftshader_indirect` and `auto` both crashed.
 4. **🐏 RAM is tight** — 3.5 GB total means limiting the emulator to 1024 MB. The emulator uses ~300-500 MB at runtime, leaving room for other services.
 5. **⏱️ First boot is slow** — Android 14 takes 2-3 minutes on first boot (cache optimization). Subsequent boots are faster with `-no-snapshot`.
+
+---
+
+## 🔧 Troubleshooting
+
+### SEGV during Vulkan initialization
+
+```
+ERROR | Could not open libX11-xcb.so.1, give up
+[1] 36193 segmentation fault (core dumped)
+```
+
+**Fix:** Install the missing library:
+
+```bash
+sudo dnf install -y libX11-xcb
+```
+
+This is a separate package from `libX11` on CentOS Stream 9. The emulator loads it via `dlopen()` during GPU setup, so `ldd` won't flag it as missing.
+
+### Emulator starts and dies immediately
+
+Check the systemd journal:
+
+```bash
+sudo journalctl -xeu android-emulator.service --no-pager | grep -i segv
+```
+
+Common causes:
+- Missing X11 libraries (install the full dependency list above)
+- SELinux blocking exec from home directory (use `/opt/android-sdk`)
+- Out of memory (reduce AVD RAM below 1024 MB)
 
 ---
 
