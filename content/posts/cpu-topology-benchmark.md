@@ -126,16 +126,37 @@ With one NUMA domain, all memory access is local — there's no penalty for a vC
 
 ## Scaling Insights
 
-```
-12 threads:  ~11,000/s  →  6.0x over single thread
-24 threads:  ~11,000/s  →  No improvement (overcommit)
+Measuring every thread count from 1 to 24 reveals the full picture:
+
+```bash
+for t in 1 2 4 6 8 10 12 16 20 24; do
+  sysbench cpu --threads=$t --time=10 run 2>&1 | grep "events per second"
+done
 ```
 
-The Ryzen 5 2600 has 6 physical cores / 12 threads. Adding more than 12 sysbench threads shows zero gain — the CPU is saturated. This tells us:
+| Threads | Events/sec | Scaling | Efficiency |
+|---|---|---|---|
+| 1 | 1,816 | 1.0× | — |
+| 2 | 3,520 | 1.94× | **97%** ✅ |
+| 4 | 6,800 | 3.74× | **94%** ✅ |
+| 6 | 9,041 | 4.98× | 83% ⚠️ |
+| 8 | 10,123 | 5.57× | 70% |
+| 10 | 10,672 | 5.88× | 59% |
+| **12** | **10,932** | **6.02×** | **50%** |
+| 16 | 10,966 | 6.04× | — (flat) |
+| 20 | 10,945 | 6.03× | — (flat) |
+| 24 | 10,941 | 6.02× | — (flat) |
 
+**What this tells us:**
+
+- **Up to 4 threads:** Near-perfect scaling (~95% efficiency). Each added thread gives almost linear gains.
+- **6 threads:** Efficiency drops to 83% — this matches the host's 6 physical cores. Memory bandwidth starts to bottleneck.
+- **8-12 threads:** Diminishing returns. You're now using SMT/hyperthreading which adds ~50% over 6 cores, not 100%.
+- **12+ threads:** Completely flat. The host Ryzen 5 2600 is saturated.
 - The VMware hypervisor is **efficient** — near-linear scaling up to physical core count
 - **Overcommitting CPU** (more vCPUs than host cores) doesn't help CPU-bound workloads
-- Memory bandwidth starts to bottleneck beyond ~8 threads
+
+**Takeaway:** For this host, **4-6 vCPUs** is the sweet spot. More than that adds scheduler overhead with no real throughput gain.
 
 ---
 
