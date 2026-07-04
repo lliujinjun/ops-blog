@@ -220,6 +220,79 @@ ssh -J jellyfish@remote-vm root@192.168.122.16
 
 ---
 
+## Alternative: Interactive Serial Console Install
+
+If you prefer a manual install (or kickstart debugging fails), you can do the entire CentOS 7 installation interactively over a serial console. This uses the installer's text-mode TUI, which is fully functional over `ttyS0`.
+
+### Create the VM with serial console kernel args
+
+```bash
+sudo virt-install \
+  --name centos7-vm \
+  --memory 1024 \
+  --vcpus 1 \
+  --disk path=/var/lib/libvirt/images/centos7-vm.qcow2,size=10,format=qcow2 \
+  --location /var/lib/libvirt/images/CentOS-7-x86_64-Minimal-2009.iso \
+  --extra-args="console=tty0 console=ttyS0" \
+  --os-variant centos7.0 \
+  --graphics none \
+  --console pty,target_type=serial \
+  --network network=default,model=virtio \
+  --noautoconsole
+```
+
+> `--location` is required here instead of `--cdrom` because `--extra-args` only works with `--location` or `--kernel` installs.
+
+### Connect and install
+
+```bash
+sudo virsh console centos7-vm --force
+```
+
+You'll see the boot menu, then the CentOS 7 text-based installer. Navigate using:
+- **Tab** — move between fields
+- **Space** — toggle checkboxes
+- **Number keys** — select menu items
+- **c** — continue / confirm
+- **q** — go back
+
+### Installer workflow
+
+1. **Language** — default (English), press Enter
+2. **Installation Summary** screen with these spokes to configure:
+
+   | Spoke | Action |
+   |---|---|
+   | Time settings | Select your timezone |
+   | Installation Destination | Select the disk, check "Automatically configure partitioning" |
+   | Root password | Set a password |
+   | User creation | Create a user (optional) |
+
+3. After all required spokes show **[x]**, press **b** to begin installation
+4. Wait for package install to complete (~5-10 minutes)
+5. Press **Reboot** when prompted
+
+After reboot, the VM will shut down (libvirt doesn't auto-restart). Start it manually:
+
+```bash
+sudo virsh start centos7-vm
+```
+
+Then SSH in:
+
+```bash
+ssh root@<vm-ip>
+```
+
+### Pros and cons vs kickstart
+
+| Approach | Pros | Cons |
+|---|---|---|
+| **Interactive console** | Simple, no kickstart file needed, flexible | Requires manual input, can'\''t script |
+| **Kickstart ISO** | Fully automated, reproducible | More setup, harder to debug |
+
+---
+
 ## 💡 Lessons Learned
 
 1. **📀 `--cdrom` + kickstart needs custom ISO** — You can't inject kernel args with `--cdrom` (only with `--location`). The most reliable approach is to bake the kickstart into a custom ISO and modify `isolinux.cfg` to use it.
