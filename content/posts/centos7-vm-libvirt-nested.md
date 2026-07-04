@@ -158,7 +158,29 @@ sudo virt-install \
 The installation runs fully automated. To watch progress:
 
 ```bash
-sudo virsh console centos7-vm
+sudo virsh console centos7-vm --force
+```
+
+You'll see the kernel boot messages, package installation progress, and post-install scripts running in real time. Press **Ctrl+]** to disconnect from the console without stopping the VM.
+
+### 🔍 Verifying the kickstart via console
+
+When the installer finishes, the console will show:
+
+```
+Running post-installation scripts
+...
+Stopping Network Manager...
+Deactivating swap...
+Unmounting filesystems...
+```
+
+Followed by the VM shutting itself off (kickstart's `reboot` command triggers a clean shutdown in libvirt). This confirms everything worked.
+
+After shutdown, start the VM:
+
+```bash
+sudo virsh start centos7-vm
 ```
 
 ---
