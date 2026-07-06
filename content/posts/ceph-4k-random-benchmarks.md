@@ -1,7 +1,7 @@
 +++
-date = '2026-07-06T14:05:00+08:00'
+date = '2026-07-06T14:12:00+08:00'
 draft = false
-title = 'Ceph Performance Benchmarks: Raw Disk vs RADOS vs RBD'
+title = 'Ceph 4K Random I/O Benchmarks: Raw Disk vs RADOS vs RBD'
 +++
 
 **Environment:** CentOS Stream 9 · Ceph Reef 18.2.8 · Manual Install · VMware VM · 4 OSDs (4 × 20 GB VMDK) · 4 vCPUs · 4 GB RAM
